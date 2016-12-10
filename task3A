@@ -1,0 +1,128 @@
+import express from 'express';
+import cors from 'cors';
+
+const app = express();
+app.use(cors());
+
+app.get('*',(req, res) => {
+    var full='{"board":{"vendor":"IBM","model":"IBM-PC S-100","cpu":{"model":"80286","hz":12000},"image":"http://www.s100computers.com/My%20System%20Pages/80286%20Board/Picture%20of%2080286%20V2%20BoardJPG.jpg","video":"http://www.s100computers.com/My%20System%20Pages/80286%20Board/80286-Demo3.mp4"},"ram":{"vendor":"CTS","volume":1048576,"pins":30},"os":"MS-DOS 1.25","floppy":0,"hdd":[{"vendor":"Samsung","size":33554432,"volume":"C:"},{"vendor":"Maxtor","size":16777216,"volume":"D:"},{"vendor":"Maxtor","size":8388608,"volume":"C:"}],"monitor":null,"length":42,"height":21,"width":54}';
+  var obj=JSON.parse(full);
+  //var k=req.route+' '+req.params;
+  var s=req.params["0"];
+  if (s=='/hdd'){
+    res.send(obj["hdd"]);
+  }
+  if (s=='/volumes'){
+    var arr2=[];
+      var t=true;
+      var arr3={};
+      var i=0;
+      var letter;
+      var size;
+      //console.log('start');
+      while (obj["hdd"].length>0){
+      	k=obj["hdd"].pop();
+      	var letter=k["volume"];
+      	var size=k["size"];
+      	for (var i=0;i<arr2.length && t;i++){
+      		arr3=arr2[i];
+      		if (arr3["letter"]==letter){
+      			arr3["size"]+=size;
+      			t=false;
+      			arr2[i]=arr3;
+      			//console.log('setting to false with '+arr3.letter);
+      		}
+      	}
+      	if (t==true){
+      		//console.log('t true, adding element '+letter+' '+size);
+      		var arr1={};
+      		arr1.letter=letter;
+      		arr1.size=size;
+      		arr2.push(arr1);
+      		//console.log('arr2.length '+arr2.length);
+      	}
+      	t=true;
+      }
+      res.send(arr2);
+  }
+  if (s=='/'){
+    res.send(obj);
+    //res.sendStatus(200);
+    }
+  else{
+    console.log(s);
+    var path=s.replace('/','').split('/');
+    console.log('path');
+    console.log(path);
+    if (path.length==1){
+        console.log('short path');
+      try {
+        console.log('Path length 0, trying to do stuff');
+        var l=s.replace('/','');
+        if(obj[l]!=undefined)
+          {
+            try{
+              if (obj[l].indexOf("{")<0){
+                console.log('print one word from obj');
+                var s='"'+obj[l]+'"';
+                res.send(s);
+              }
+            }
+            catch(err){
+
+              res.send(obj[l]);
+            }
+          }
+            else{
+              res.sendStatus(404);
+          }
+        //res.sendStatus(200);
+      }
+      catch(err){
+        res.sendStatus(404);
+      }
+    }
+    else{
+      var currPath=obj;
+      console.log('long path');
+      console.log(currPath);
+      for(var i=0;i<path.length;i++){
+        try {
+          currPath=currPath[path[i]];
+          console.log(i);
+          console.log(path[i]);
+          console.log(currPath);
+        }
+        catch(err){
+          res.sendStatus(404);
+        }
+      }
+      if (currPath!=undefined){
+        try{
+          console.log('tracing the issue'+currPath);
+          console.log(Number(currPath));
+          if ((Number(currPath).toString()!='NaN')|| (currPath.indexOf("{")<0)){
+            console.log('One word here!');
+            var s='"'+currPath+'"';
+            if (Number(currPath).toString()!='NaN'){
+              s=Number(currPath).toString();
+            }            
+            res.send(s);
+          }
+        }
+        catch(err){
+
+          res.send(currPath);
+        }
+      }
+      else{
+        res.sendStatus(404);
+      }
+    }
+  }
+
+});
+
+app.listen(3000, () => {
+  console.log('Your app listening on port 3000!');
+});
